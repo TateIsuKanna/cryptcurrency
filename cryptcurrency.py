@@ -1,11 +1,22 @@
 import hashlib
+import OpenSSL
+import datetime
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+
+with open("private.pem", "rb") as key_file:
+    private_key=serialization.load_pem_private_key(key_file.read(), password=None, backend=default_backend())
 
 class Transaction():
     def __init__(self,sender,recipient,amount):
         self.sender=sender
         self.recipient=recipient
         self.amount=amount
-        self.signature=b"0"
+        
+
+        p=datetime.datetime.now()
+        self.signature=OpenSSL.crypto.sign(OpenSSL.crypto.PKey.from_cryptography_key(private_key),"from"+str(self.sender)+" to"+str(self.recipient)+" "+str(self.amount),"sha256")
     def __repr__(self):
         return "from"+str(self.sender)+" to"+str(self.recipient)+" "+str(self.amount)+str(self.signature)
 
@@ -23,7 +34,7 @@ class Block():
             self.previous_hash=ledger.blocks[-1].calc_hash()
         while True:
             temp=self.calc_hash()
-            if temp.startswith("000000"):
+            if temp.startswith("000"):
                 print(temp)
                 break
             self.proof=temp
