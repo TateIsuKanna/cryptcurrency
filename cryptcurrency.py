@@ -1,21 +1,17 @@
 import hashlib
 import OpenSSL
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-
 with open("private.pem", "rb") as key_file:
-    private_key=serialization.load_pem_private_key(key_file.read(), password=None, backend=default_backend())
+    private_key=OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM,key_file.read())
 
 class Transaction():
     def __init__(self,sender,recipient,amount):
         self.sender=sender
         self.recipient=recipient
         self.amount=amount
-        
-        self.signature=OpenSSL.crypto.sign(OpenSSL.crypto.PKey.from_cryptography_key(private_key),"from"+str(self.sender)+" to"+str(self.recipient)+" "+str(self.amount),"sha256")
+        self.signature=OpenSSL.crypto.sign(private_key,"from"+str(self.sender)+" to"+str(self.recipient)+" "+str(self.amount),"sha256")
     def __str__(self):
-        return str(self.sender)+" -> "+str(self.recipient)+" "+str(self.amount)+" "+str(self.signature)[:10]+"..."
+        return str(self.sender)+" -> "+str(self.recipient)+" "+str(self.amount)+" "+str(self.signature)[:20]+"..."
 
 class Block():
     def __init__(self):
@@ -49,14 +45,6 @@ class Blockchain():
 
     def __str__(self):
         return str("\n\n".join([str(t) for t in self.blocks]))
-
-    #@staticmethod
-    #def hash(block):
-    #    pass
-
-    #@property
-    #def last_block(self):
-    #    pass
 
 ledger=Blockchain()
 b=Block()
